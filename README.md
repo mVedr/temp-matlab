@@ -1,6 +1,7 @@
 ASK:
-
+<pre>
 %GENERATE CARRIER SIGNAL
+
 Tb=1; fc=2; % same carrier frequency for both signals
 t=0:(Tb/100):Tb;
 c=sqrt(2/Tb)*sin(2*pi*fc*t);
@@ -49,10 +50,10 @@ end
 %Plotting the demodulated data bits
 subplot(3,2,6);stem(demod);
 title(' demodulated data');xlabel('n---->');ylabel('b(n)'); grid on;
-
+</pre>
 
 FSK:
-
+<pre>
 % GENERATE CARRIER SIGNAL
 Tb=1; fc1=2;fc2=5;
 t=0:(Tb/100):Tb;
@@ -145,9 +146,10 @@ title('Demodulated data');
 xlabel('n---->');
 ylabel('b(n)');
 grid on;
-
+</pre>
 
 PSK:
+<pre>
 %Phase Shift Key
 
 %GENERATE CARRIER SIGNAL
@@ -206,3 +208,4 @@ end
 %plot the demodulated data bits
 subplot(5,1,5);stem(demod);
 title('demodulated data');xlabel('n--->');ylabel('b(n)'); 
+</pre>
