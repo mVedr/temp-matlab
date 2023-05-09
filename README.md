@@ -1,211 +1,148 @@
-ASK:
 <pre>
-%GENERATE CARRIER SIGNAL
-
-Tb=1; fc=2; % same carrier frequency for both signals
-t=0:(Tb/100):Tb;
-c=sqrt(2/Tb)*sin(2*pi*fc*t);
-%generate message signal
-N=8;
-m=rand(1,N);
-t1=0;t2=Tb;
-for i=1:N
-    t=[t1:(Tb/100):t2];
-    if m(i)>0.5
-        m_s=ones(1,length(t));
-    else
-        m_s=zeros(1,length(t));
-    end
-    message(i,:)=m_s;
-    %Multiplier
-    ask_sig(i,:)=c.*(m_s*2-1);
-    %plotting the message signal and the modulated signal
-    subplot(3,2,2);axis([0 N -2 2]);plot(t,message(i,:),'r'); title('message signal');xlabel('t---->');ylabel('m(t)');grid on;hold on;
-    subplot(3,2,5);plot(t,ask_sig(i,:));
-    title('ASK signal');xlabel('t---->');ylabel('s(t)');grid on;hold on;
-    t1=t1+(Tb+.01); t2=t2+(Tb+.01);
-end
-hold off
-%Plotting binary data bits and carrier signal
-subplot(3,2,1);stem(m);
-title('binary data');xlabel('n---->');
-ylabel('b(n)');grid on;
-subplot(3,2,3);plot(t,c);
-title('carrier signal');xlabel('t---->');ylabel('c(t)');grid on;
-% ASK Demodulation
-t1=0;t2=Tb;
-for i=1:N
-    t=[t1:(Tb/100):t2];
-    %correlator
-    x=sum(c.*ask_sig(i,:));
-    %decision device
-    if x>0
-        demod(i)=1;
-    else
-        demod(i)=0;
-    end
-    t1=t1+(Tb+.01);
-    t2=t2+(Tb+.01);
-end
-%Plotting the demodulated data bits
-subplot(3,2,6);stem(demod);
-title(' demodulated data');xlabel('n---->');ylabel('b(n)'); grid on;
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+struct node
+{
+    char name[4];
+    int x;
+    int y;
+    int c_time;
+    int ta;
+    int w_t;
+};
+void take_input_aditya(struct node *temp, int n)
+{
+    for (int i = 0; i < n; i++)
+    {
+        printf("enter the name ,arrival time and burst time\n");
+        scanf("%s %d %d", ((temp + i)->name), &((temp + i))->x, &(temp + i)->y);
+        // printf("%s,%d,%d\n",((temp+i)->name),((temp+i))->x,(temp+i)->y);
+    }
+}
+void sorting(struct node *temp, int n)
+{
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = i + i; j < n; j++)
+        {
+            if (temp[i].x > temp[j].x || (temp[i].x == temp[j].x && temp[i].y > temp[j].y))
+            {
+                int help1 = temp[i].x;
+                temp[i].x = temp[j].x;
+                temp[j].x = help1;
+                help1 = temp[i].y;
+                temp[i].y = temp[j].y;
+                temp[j].y = help1;
+                char *help = (char *)malloc(4 * sizeof(char));
+                strcpy(help, temp[i].name);
+                strcpy(temp[i].name, temp[j].name);
+                strcpy(temp[j].name, help);
+                free(help);
+            }
+        }
+    }
+    return;
+}
+void sjf_preemtive(struct node *temp, int n)
+{
+    sorting(temp, n);
+    int help = 0;
+    float wt = 0, t_around = 0;
+    temp[0].c_time = temp[0].x + temp[0].y + help;
+    temp[0].ta = temp[0].c_time - temp[0].x;
+    t_around += (float)(temp[0].ta);
+    temp[0].w_t = temp[0].ta - temp[0].y;
+    wt += (float)(temp[0].w_t);
+    help = temp[0].x + temp[0].y;
+    printf("%s %d %d %d %d %d\n", temp[0].name, temp[0].x, temp[0].y, temp[0].c_time, temp[0].ta, temp[0].w_t);
+    for (int i = 1; i < n; i++)
+    {
+        temp[i].c_time = temp[i].y + help;
+        help = temp[i].c_time;
+        temp[i].ta = temp[i].c_time - temp[i].x;
+        t_around += (float)(temp[i].ta);
+        temp[i].w_t = temp[i].ta - temp[i].y;
+        wt += (float)(temp[i].w_t);
+        printf("process no ,arrival time,burst time ,completion time , TAT, WT, RT\n");
+        printf("%s %d %d %d %d %d\n", temp[i].name, temp[i].x, temp[i].y, temp[i].c_time, temp[i].ta, temp[i].w_t);
+    }
+    printf("average turnaround time is %f: \n", t_around / n);
+    printf("average waiting time is %f : \n", wt / n);
+    printf("average throughput time is %f:\n", (float)(temp[n - 1].c_time) / n);
+}
+int main()
+{
+    int n;
+    printf("enter the number process: \n");
+    scanf("%d", &n);
+    struct node sjf[n];
+    take_input_aditya(sjf, n);
+    sjf_preemtive(sjf, n);
+}
 </pre>
 
-FSK:
 <pre>
-% GENERATE CARRIER SIGNAL
-Tb=1; fc1=2;fc2=5;
-t=0:(Tb/100):Tb;
-c1=sqrt(2/Tb)*sin(2*pi*fc1*t);
-c2=sqrt(2/Tb)*sin(2*pi*fc2*t);
+#include <stdio.h>
+#define MAX_FRAMES 10
 
-% GENERATE MESSAGE SIGNAL
-N=8;
-m=rand(1,N);
-t1=0;t2=Tb;
-for i=1:N
-    t=[t1:(Tb/100):t2];
-    if m(i)>0.5
-        m(i)=1;
-        m_s=ones(1,length(t));
-        invm_s=zeros(1,length(t));
-    else
-        m(i)=0;
-        m_s=zeros(1,length(t));
-        invm_s=ones(1,length(t));
-    end
-    message(i,:)=m_s;
-    % MULTIPLIER
-    fsk_sig1(i,:)=c1.*m_s;
-    fsk_sig2(i,:)=c2.*invm_s;
-    fsk=fsk_sig1+fsk_sig2;
-    % PLOTTING THE MESSAGE SIGNAL AND THE MODULATED SIGNAL
-    subplot(3,2,2);
-    axis([0 N -2 2]);
-    plot(t,message(i,:),'r');
-    title('Message signal');
-    xlabel('t---->');
-    ylabel('m(t)');
-    grid on;
-    hold on;
-    subplot(3,2,5);
-    plot(t,fsk(i,:));
-    title('FSK signal');
-    xlabel('t---->');
-    ylabel('s(t)');
-    grid on;
-    hold on;
-    t1=t1+(Tb+.01);
-    t2=t2+(Tb+.01);
-end
-hold off
+int main()
+{
+    int frames[MAX_FRAMES], pages[MAX_FRAMES];
+    int num_frames, num_pages, page_faults = 0, hit = 0, i, j, k, min;
+    printf("Enter number of frames: ");
+    scanf("%d", &num_frames);
+    printf("Enter number of pages: ");
+    scanf("%d", &num_pages);
+    printf("Enter the reference string: ");
+    for(i = 0; i < num_pages; ++i)
+        scanf("%d", &pages[i]);
+    for(i = 0; i < num_frames; ++i)
+        frames[i] = -1; // initialize all frames to -1 (empty)
+    for(i = 0; i < num_pages; ++i)
+    {
+        for(j = 0; j < num_frames; ++j)
+        {
+            if(frames[j] == pages[i]) // check if page is already in frame
+            {
+                hit = 1; // page hit
+                break;
+            }
+        }
+        if(hit == 0) // page fault
+        {
+            min = 9999;
+            for(j = 0; j < num_frames; ++j) // find the least recently used page
+            {
+                for(k = i - 1; k >= 0; --k)
+                {
+                    if(frames[j] == pages[k])
+                    {
+                        if(k < min)
+                        {
+                            min = k;
+                            break;
+                        }
+                    }
+                }
+                if(k < 0)
+                {
+                    min = j;
+                    break;
+                }
+            }
+            frames[min] = pages[i]; // replace the least recently used page
+            ++page_faults;
+        }
+        hit = 0;
+        printf("\n");
+        for(j = 0; j < num_frames; ++j) // print the current state of frames
+        {
+            printf("%d\t", frames[j]);
+        }
+    }
+    printf("\nTotal Page Faults = %d", page_faults);
+    return 0;
+}
 
-% PLOTTING BINARY DATA BITS AND CARRIER SIGNAL
-subplot(3,2,1);
-stem(m);
-title('Binary data');
-xlabel('n---->');
-ylabel('b(n)');
-grid on;
-subplot(3,2,3);
-plot(t,c1);
-title('Carrier signal-1');
-xlabel('t---->');
-ylabel('c1(t)');
-grid on;
-subplot(3,2,4);
-plot(t,c2);
-title('Carrier signal-2');
-xlabel('t---->');
-ylabel('c2(t)');
-grid on;
-
-% FSK DEMODULATION
-t1=0;t2=Tb;
-for i=1:N
-    t=[t1:(Tb/100):t2];
-    % CORRELATOR
-    x1=sum(c1.*fsk_sig1(i,:));
-    x2=sum(c2.*fsk_sig2(i,:));
-    x=x1-x2;
-    % DECISION DEVICE
-    if x>0
-        demod(i)=1;
-    else
-        demod(i)=0;
-    end
-    t1=t1+(Tb+.01);
-    t2=t2+(Tb+.01);
-end
-
-% PLOTTING THE DEMODULATED DATA BITS
-subplot(3,2,6);
-stem(demod);
-title('Demodulated data');
-xlabel('n---->');
-ylabel('b(n)');
-grid on;
-</pre>
-
-PSK:
-<pre>
-%Phase Shift Key
-
-%GENERATE CARRIER SIGNAL
-Tb=1;
-t=0:Tb/100:Tb;
-fc=2;
-c=sqrt(2/Tb)*sin(2*pi*fc*t);
-%generate message signal
-N=8;
-m=rand(1,N);
-t1=0;t2=Tb;
-for i=1:N
-    t=[t1:.01:t2];
-    if m(i)>0.5
-        m(i)=1;
-        m_s=ones(1,length(t));
-    else
-        m(i)=0;
-        m_s=-1*ones(1,length(t));
-    end
-    message(i,:)=m_s;
-    %product of carrier and message signal
-    bpsk_sig(i,:)=c.*m_s;
-    %Plot the message and BPSK modulated signal
-    subplot(5,1,2);axis([0 N -2 2]);plot(t,message(i,:),'r');
-    title('message signal(POLAR form)');xlabel('t--->');ylabel('m(t)');
-    grid on; hold on;
-    subplot(5,1,4);plot(t,bpsk_sig(i,:));
-    title('BPSK signal');xlabel('t--->');ylabel('s(t)');
-    grid on; hold on;
-    t1=t1+1.01; t2=t2+1.01;
-end
-hold off
-%plot the input binary data and carrier signal
-subplot(5,1,1);stem(m);
-title('binary data bits');xlabel('n--->');ylabel('b(n)');
-grid on;
-subplot(5,1,3);plot(t,c);
-title('carrier signal');xlabel('t--->');ylabel('c(t)');
-grid on;
-% PSK Demodulation
-t1=0;t2=Tb;
-for i=1:N
-    t=[t1:.01:t2];
-    %correlator
-    x=sum(c.*bpsk_sig(i,:));
-    %decision device
-    if x>0
-        demod(i)=1;
-    else
-        demod(i)=0;
-    end
-    t1=t1+1.01;
-    t2=t2+1.01;
-end
-%plot the demodulated data bits
-subplot(5,1,5);stem(demod);
-title('demodulated data');xlabel('n--->');ylabel('b(n)'); 
 </pre>
